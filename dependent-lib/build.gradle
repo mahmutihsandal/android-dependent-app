@@ -11,6 +11,7 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
+
 plugins {
     alias(libs.plugins.android.library)
     id 'maven-publish'
@@ -22,7 +23,6 @@ android {
 
     defaultConfig {
         minSdk 24
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -32,43 +32,49 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             consumerProguardFiles 'consumer-rules.pro'
-
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
-    }
-}
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-dependencies {
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+}
+
+dependencies {
     implementation libs.appcompat
     implementation libs.material
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
 }
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'com.github.mahmutihsandal'
-            artifactId = 'android-dependent-app'
-            version = "1.0"
-            pom {
-                description = 'DESC'
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+
+                groupId = 'com.github.mahmutihsandal'
+                artifactId = 'android-dependent-app'
+                version = "1.0"
+
+                pom.withXml {
+                    def root = asNode()
+                    root.appendNode('name', 'android-dependent-app')
+                    root.appendNode('description', 'Second Android Library')
+                }
             }
         }
-    }
-    repositories {
-        mavenLocal()
+        repositories {
+            mavenLocal()
+        }
     }
 }
